@@ -91,6 +91,10 @@ input:focus,select:focus,.in:focus{border-color:var(--red);outline:none}
 .ask:focus-within{border-color:var(--red)}
 .ask textarea{flex:1;min-width:0;border:0;background:transparent;resize:none;font:inherit;font-size:16px;padding:8px;min-height:46px;max-height:150px;color:var(--ink);outline:none;line-height:1.4}
 .ask .btn{padding:11px 16px;flex:none}
+.cam{flex:none;width:46px;height:46px;border-radius:10px;background:var(--red-soft);color:var(--red);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cam svg{width:24px;height:24px}
+.cam.off{opacity:.5;pointer-events:none}
+a{color:var(--red);font-weight:600}
 .thinking{display:flex;align-items:center;gap:8px;color:var(--red);font-weight:600;font-size:.9rem}
 .dots{display:inline-flex;gap:3px}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
@@ -209,13 +213,14 @@ const TIPS = {
 };
 const FAV_SLOTS = 4;
 const LS_KEY = 'tzalachat.v1';
+const CLAUDE_URL = 'https://claude.ai/artifact/XNGhR2FkWyg47gK13ePZgX';
 
 const S = {
   ready: false, loadError: false, mode: 'local',
   profile: null, days: {}, weights: [], chat: [], favs: [],
   tab: 'today', lastTab: null, date: todayKey(), weekRef: todayKey(), meal: defaultMeal(),
   showBreak: false, showLog: false, favEdit: false, sheet: null, profileOpen: false,
-  ai: null, aiOff: false, aiBusy: false, favBusy: false, coachBusy: false, coachCtl: null, stream: '',
+  ai: null, aiOff: false, aiBusy: false, imgOK: false, busyMsg: '', favBusy: false, coachBusy: false, coachCtl: null, stream: '',
   clearIds: new Set()
 };
 
@@ -410,6 +415,141 @@ function aiErr(e) {
   return 'משהו השתבש בחיבור. נסה שוב.';
 }
 
+// ---------- מחשבון מובנה (כשאין בינה מלאכותית) ----------
+// [מילות זיהוי, שם, קלוריות, חלבון, מנות ירק/פרי, ג'אנק, גרם ליחידה] — ערכים משוערים למנה רגילה
+const FOODS = [
+  [["חביתה", "חביתת"], "חביתה", 200, 13, 0, false, 0],
+  [["ביצים", "ביצה", "ביצת"], "ביצה", 70, 6, 0, false, 50],
+  [["שקשוקה"], "שקשוקה", 350, 20, 1, false, 0],
+  [["פיתה", "פיתות"], "פיתה", 250, 8, 0, false, 90],
+  [["לחמניה", "לחמנייה", "לחמניות"], "לחמנייה", 200, 7, 0, false, 80],
+  [["באגט", "בגט"], "באגט", 600, 20, 0, false, 0],
+  [["טוסט גבינה", "טוסט"], "טוסט גבינה", 350, 18, 0, false, 0],
+  [["פרוסות לחם", "פרוסת לחם", "פרוסות", "פרוסה"], "פרוסת לחם", 80, 3, 0, false, 30],
+  [["לחם"], "לחם, 2 פרוסות", 160, 6, 0, false, 0],
+  [["שווארמה", "שוורמה", "שווארמה"], "שווארמה בפיתה", 700, 40, 0, false, 0],
+  [["פלאפל"], "פלאפל בפיתה", 600, 18, 1, false, 0],
+  [["שניצל", "שניצלים"], "שניצל", 350, 28, 0, false, 120],
+  [["חזה עוף", "פרגיות", "פרגית", "עוף"], "עוף", 250, 40, 0, false, 150],
+  [["המבורגר", "בורגר"], "המבורגר", 600, 30, 0, true, 0],
+  [["קציצות", "קציצה"], "קציצה", 120, 9, 0, false, 60],
+  [["אנטריקוט", "סטייק", "בשר"], "בשר", 400, 40, 0, false, 150],
+  [["סלמון", "אמנון", "דניס", "דגים", "דג"], "דג", 300, 35, 0, false, 150],
+  [["טונה"], "טונה, קופסה", 110, 25, 0, false, 0],
+  [["נקניקיות", "נקניקייה", "נקניקיה", "נקניק"], "נקניקייה", 150, 6, 0, false, 0],
+  [["קוטג׳", "קוטג'", "קוטג"], "קוטג׳, גביע", 245, 27, 0, false, 250],
+  [["גבינה צהובה", "צהובה"], "פרוסת גבינה צהובה", 70, 5, 0, false, 20],
+  [["גבינה לבנה", "גבינה"], "גבינה לבנה", 100, 10, 0, false, 100],
+  [["יוגורט חלבון"], "יוגורט חלבון", 140, 20, 0, false, 0],
+  [["יוגורט"], "יוגורט", 140, 10, 0, false, 0],
+  [["מילקי", "פודינג"], "מילקי", 200, 5, 0, true, 0],
+  [["שוקו"], "כוס שוקו", 190, 8, 0, false, 0],
+  [["אבקת חלבון", "שייק חלבון", "חטיף חלבון", "חלבון", "סקופ", "שייק"], "שייק חלבון", 150, 25, 0, false, 0],
+  [["חלב"], "כוס חלב", 125, 8, 0, false, 0],
+  [["אורז"], "אורז, כוס", 205, 4, 0, false, 160],
+  [["פתיתים"], "פתיתים, כוס", 220, 7, 0, false, 0],
+  [["ספגטי", "מקרוני", "פסטה"], "פסטה, כוס", 220, 8, 0, false, 140],
+  [["קוסקוס", "בורגול", "קינואה"], "קוסקוס, כוס", 200, 7, 0, false, 0],
+  [["פירה"], "פירה", 220, 4, 0, false, 0],
+  [["צ׳יפס", "צ'יפס", "ציפס"], "צ׳יפס", 400, 5, 0, true, 0],
+  [["תפוחי אדמה", "תפוח אדמה", "תפוא", "בטטה"], "תפוח אדמה", 160, 4, 0, false, 0],
+  [["חומוס"], "חומוס, מנה", 380, 12, 0, false, 150],
+  [["טחינה"], "טחינה, 2 כפות", 180, 5, 0, false, 0],
+  [["עדשים", "שעועית", "אפונה"], "קטניות, כוס", 230, 16, 1, false, 0],
+  [["טופו"], "טופו", 150, 15, 0, false, 0],
+  [["סושי"], "סושי, 8 יחידות", 350, 14, 0, false, 0],
+  [["פיצה"], "משולש פיצה", 280, 12, 0, true, 0],
+  [["בורקסים", "בורקס"], "בורקס", 350, 8, 0, true, 0],
+  [["מרק"], "מרק", 200, 8, 1, false, 0],
+  [["סלט"], "סלט ירקות", 60, 2, 2, false, 0],
+  [["ירקות", "מלפפונים", "מלפפון", "עגבניות", "עגבנייה", "עגבניה", "גזר", "פלפל", "חסה", "ברוקולי"], "ירקות", 30, 1, 1, false, 0],
+  [["בננות", "בננה"], "בננה", 105, 1, 1, false, 0],
+  [["תפוחים", "תפוח", "תפוזים", "תפוז", "אגס", "קלמנטינה", "אפרסק", "פירות", "פרי", "ענבים", "אבטיח", "מלון", "תותים", "תות", "מנגו", "קיווי"], "פרי", 80, 1, 1, false, 0],
+  [["תמרים", "תמר"], "תמר", 65, 0, 0, false, 0],
+  [["חמאת בוטנים"], "חמאת בוטנים, כף", 95, 4, 0, false, 0],
+  [["אגוזים", "שקדים", "בוטנים", "קשיו", "פיסטוק"], "אגוזים, חופן", 170, 6, 0, false, 30],
+  [["שיבולת שועל", "קוואקר", "דייסה"], "שיבולת שועל", 200, 7, 0, false, 0],
+  [["דגני בוקר", "קורנפלקס", "גרנולה"], "דגני בוקר עם חלב", 300, 10, 0, false, 0],
+  [["פנקייקים", "פנקייק", "וופל"], "פנקייק", 200, 5, 0, false, 0],
+  [["במבה", "ביסלי", "חטיפים", "חטיף", "צ׳יטוס", "דוריטוס"], "חטיף", 150, 3, 0, true, 0],
+  [["שוקולד", "עוגיות", "עוגייה", "עוגיה", "עוגה", "גלידה", "ממתקים", "ממתק", "סוכריות", "דונאט", "סופגניה", "חלבה"], "מתוק", 250, 3, 0, true, 0],
+  [["שתייה ממותקת", "שתיה ממותקת", "משקה אנרגיה", "רד בול", "קולה", "ספרייט", "פאנטה", "מיץ", "אייס"], "שתייה ממותקת", 140, 0, 0, true, 0]
+];
+const NUMW = { 'חצי': 0.5, 'אחד': 1, 'אחת': 1, 'שני': 2, 'שתי': 2, 'שניים': 2, 'שתיים': 2, 'זוג': 2, 'שלוש': 3, 'שלושה': 3, 'ארבע': 4, 'ארבעה': 4, 'חמש': 5, 'חמישה': 5, 'שש': 6, 'שישה': 6, 'כמה': 2 };
+const MEASURE = '(?:כוסות|כוס|כפות|כף|כפיות|כפית|פרוסות|פרוסת|יחידות|מנות|מנה|צלחות|צלחת|קופסאות|קופסת|קופסה|גביעים|גביע|חתיכות|חתיכה|משולשים|משולש)?';
+const RE_NUM = new RegExp('(\\d+(?:\\.\\d+)?)\\s*(גרם|גר׳|גר\'|ג׳|ג\')?\\s*' + MEASURE + '\\s*$');
+const RE_WORD = new RegExp('(' + Object.keys(NUMW).sort((a, b) => b.length - a.length).join('|') + ')\\s*' + MEASURE + '\\s*$');
+const FOOD_KEYS = FOODS.flatMap((f, i) => f[0].map(k => [k, i])).sort((a, b) => b[0].length - a[0].length);
+
+function scaleFood(f, before, size) {
+  const [, name, kcal, protein, veg, junk, g] = f;
+  let mult = 1, label = name;
+  const m = before.match(RE_NUM), w = !m && before.match(RE_WORD);
+  if (m) {
+    const n = parseFloat(m[1]);
+    if (m[2]) { if (g) mult = n / g; label = name.split(',')[0] + `, ${n} גרם`; }
+    else { mult = n; if (n !== 1) label = `${n} × ${name}`; }
+  } else if (w) {
+    mult = NUMW[w[1]];
+    if (mult === 0.5) label = 'חצי ' + name; else if (mult !== 1) label = `${mult} × ${name}`;
+  }
+  mult = Math.min(10, Math.max(0.25, mult)) * size;
+  if (size > 1) label += ' (גדול)'; else if (size < 1) label += ' (קטן)';
+  return { name: label, kcal: Math.round(kcal * mult), protein: Math.round(protein * mult), veg: Math.round(veg * Math.min(mult, 3)), junk };
+}
+function localEstimate(text) {
+  const segs = text.split(/[,،\n;+]|\s+עם\s+|\s+וגם\s+|\s+ו(?=[א-ת])/).map(s => s.trim()).filter(Boolean);
+  const items = [];
+  let unknown = 0;
+  for (const seg of segs) {
+    let masked = seg, found = false;
+    const size = /גדול|ענק/.test(seg) ? 1.4 : /קטן|קטנה/.test(seg) ? 0.7 : 1;
+    for (const [k, i] of FOOD_KEYS) {
+      let idx;
+      while ((idx = masked.indexOf(k)) !== -1) {
+        found = true;
+        items.push(scaleFood(FOODS[i], seg.slice(Math.max(0, idx - 18), idx), size));
+        masked = masked.slice(0, idx) + ' '.repeat(k.length) + masked.slice(idx + k.length);
+      }
+    }
+    if (!found && /[א-תa-z]/i.test(seg)) { unknown++; items.push({ name: seg.slice(0, 60), kcal: 300, protein: 12, veg: 0, junk: false }); }
+  }
+  if (!items.length) { unknown = 1; items.push({ name: text.slice(0, 60), kcal: 300, protein: 12, veg: 0, junk: false }); }
+  return { items, unknown };
+}
+function addItems(items) {
+  const d = ensureDay(S.date);
+  for (const it of items) { const f = cleanFood(it, S.meal); f.id = uid(); d.foods.push(f); }
+  save('d-' + S.date);
+}
+function addedMsg(items) {
+  const p = items.reduce((a, x) => a + num(x.protein, 0, 300), 0);
+  return items.length === 1 ? `נוסף: ${items[0].name} · ${p} ג׳ חלבון` : `נוספו ${items.length} פריטים · ${p} ג׳ חלבון`;
+}
+async function photoAdd(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file || S.aiBusy || !aiOn()) return;
+  const extra = val('ask').trim();
+  S.aiBusy = true; S.busyMsg = 'מזהה את האוכל בתמונה…'; render();
+  try {
+    const items = await S.ai.json(`${FOOD_RULES}
+בתמונה יש ארוחה או מאכל. זהה כל מאכל שרואים בה, והערך את הכמות לפי מה שנראה בצלחת.${extra ? `\nהמשתמש הוסיף הסבר: ${extra.slice(0, 500)}` : ''}
+החזר רק מערך JSON של פריטים, לדוגמה:
+[{"name":"חזה עוף, 150 גרם","kcal":250,"protein":46,"veg":0,"junk":false}]
+אם אין אוכל בתמונה, החזר [].`, { images: [file], modelTier: 'default' });
+    if (!Array.isArray(items)) throw { code: 'invalid_json' };
+    if (!items.length) { toast('לא זיהיתי אוכל בתמונה. נסה לצלם מקרוב, או כתוב מה אכלת.'); return; }
+    addItems(items.slice(0, 25));
+    S.clearIds.add('ask');
+    toast(addedMsg(items));
+  } catch (e) {
+    toast(e && e.code === 'image_rejected' ? 'התמונה לא נתמכת. נסה תמונה אחרת.' : e && e.code === 'images_unavailable' ? 'צילום לא זמין כאן. כתוב מה אכלת במקום.' : aiErr(e));
+  } finally {
+    S.aiBusy = false; S.busyMsg = ''; render();
+  }
+}
+
 // ---------- פעולות ----------
 function go(tab) {
   if (tab !== 'profile') S.profileOpen = false;
@@ -430,16 +570,19 @@ function closeSheet() { S.sheet = null; render(); }
 async function askAdd() {
   const text = val('ask').trim();
   if (!text || S.aiBusy) return;
-  if (!aiOn()) { S.clearIds.add('ask'); openSheet({ type: 'manual', name: text.slice(0, 80) }); return; }
+  if (!aiOn()) {
+    const { items, unknown } = localEstimate(text);
+    addItems(items);
+    S.clearIds.add('ask');
+    toast(unknown ? `${addedMsg(items)}. ${unknown === 1 ? 'פריט אחד לא זוהה' : unknown + ' פריטים לא זוהו'}, אז הוספתי הערכה כללית שאפשר לתקן.` : addedMsg(items));
+    render(); return;
+  }
   S.aiBusy = true; render();
   try {
     const items = await estimateItems(text);
-    const d = ensureDay(S.date);
-    let p = 0;
-    for (const it of items) { const f = cleanFood(it, S.meal); f.id = uid(); d.foods.push(f); p += f.protein; }
-    save('d-' + S.date);
+    addItems(items);
     S.clearIds.add('ask');
-    toast(items.length === 1 ? `נוסף: ${items[0].name} · ${p} ג׳ חלבון` : `נוספו ${items.length} פריטים · ${p} ג׳ חלבון`);
+    toast(addedMsg(items));
   } catch (e) {
     toast(aiErr(e));
   } finally {
@@ -462,11 +605,9 @@ function addFav(id) {
 async function saveFav() {
   const name = val('f-name').trim();
   if (!name) { toast('כתוב מה אתה אוהב לאכול'); return; }
-  const manual = val('f-kcal') !== '' || val('f-protein') !== '';
   let item;
-  if (manual || !aiOn()) {
-    if (!manual) { toast('תכניס קלוריות וחלבון'); return; }
-    item = { name, kcal: val('f-kcal'), protein: val('f-protein'), veg: 0, junk: false };
+  if (!aiOn()) {
+    item = localEstimate(name).items.reduce((a, x) => ({ name, kcal: a.kcal + x.kcal, protein: a.protein + x.protein, veg: a.veg + x.veg, junk: a.junk || x.junk }), { name, kcal: 0, protein: 0, veg: 0, junk: false });
   } else {
     S.favBusy = true; render();
     try { item = await estimateOne(name); item.name = item.name || name; }
@@ -679,9 +820,11 @@ function renderToday() {
   const ask = `<section class="card">
     <div class="card-head"><h2>מה אכלת?</h2></div>
     <div class="chips" role="group" aria-label="ארוחה">${Object.entries(MEALS).map(([v, l]) => `<button class="chip ${S.meal === v ? 'on' : ''}" aria-pressed="${S.meal === v}" onclick="setMeal('${v}')">${l}</button>`).join('')}</div>
-    <div class="ask"><label class="sr" for="ask">מה אכלת</label><textarea id="ask" class="keep" rows="1" placeholder="למשל: שניצל עם אורז וסלט, וכוס שוקו" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea><button class="btn" onclick="askAdd()" ${S.aiBusy ? 'disabled' : ''}>הוסף</button></div>
-    ${S.aiBusy ? '<div class="thinking"><span class="dots"><i></i><i></i><i></i></span>מחשב קלוריות וחלבון…</div>'
-      : `<p class="small muted">${aiOn() ? 'כתוב בחופשיות. הבינה המלאכותית תעריך בערך, ואפשר לתקן כל פריט.' : 'הבינה המלאכותית לא זמינה כרגע, אז תתבקש להכניס ערכים בעצמך.'}</p>`}
+    <div class="ask"><label class="sr" for="ask">מה אכלת</label><textarea id="ask" class="keep" rows="1" placeholder="למשל: שניצל עם אורז וסלט, וכוס שוקו" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>${aiOn() && S.imgOK ? `<label class="cam ${S.aiBusy ? 'off' : ''}" title="צלם את האוכל"><span class="sr">צלם את האוכל</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*" onchange="photoAdd(this)" hidden></label>` : ''}<button class="btn" onclick="askAdd()" ${S.aiBusy ? 'disabled' : ''}>הוסף</button></div>
+    ${S.aiBusy ? `<div class="thinking"><span class="dots"><i></i><i></i><i></i></span>${S.busyMsg || 'מחשב קלוריות וחלבון…'}</div>`
+      : `<p class="small muted">${aiOn()
+        ? (S.imgOK ? 'כתוב בחופשיות, או לחץ על המצלמה וצלם את הצלחת. הבינה המלאכותית תעריך בערך, ואפשר לתקן כל פריט.' : 'כתוב בחופשיות. הבינה המלאכותית תעריך בערך, ואפשר לתקן כל פריט.')
+        : `כתוב בחופשיות, והמחשבון יעריך לפי מאכלים נפוצים. לצילום אוכל ולמאמן, פתח את <a href="${CLAUDE_URL}" target="_blank" rel="noopener">הגרסה דרך Claude</a>.`}</p>`}
   </section>`;
 
   const slots = Math.max(FAV_SLOTS - S.favs.length, 1);
@@ -725,11 +868,7 @@ function renderSheet() {
   if (s.type === 'fav') {
     body = `<h2>מה אתה אוהב לאכול?</h2>
       <label class="field"><span>שם המאכל, ואם בא לך גם כמות</span><input id="f-name" class="keep" maxlength="80" placeholder="למשל: טוסט גבינה צהובה, או 2 ביצים מקושקשות" onkeydown="if(event.key==='Enter')saveFav()"></label>
-      ${aiOn() ? '<p class="small muted">הבינה המלאכותית תעריך קלוריות וחלבון. אם אתה יודע את הערכים, אפשר להכניס אותם בעצמך.</p>' : ''}
-      <details ${aiOn() ? '' : 'open'}><summary class="small muted">אני אכניס ערכים בעצמי</summary><div class="grid2" style="margin-top:10px">
-        <label class="field"><span>קלוריות</span><input id="f-kcal" class="keep" type="number" inputmode="numeric"></label>
-        <label class="field"><span>חלבון (גרם)</span><input id="f-protein" class="keep" type="number" inputmode="numeric"></label>
-      </div></details>
+      <p class="small muted">${aiOn() ? 'הבינה המלאכותית תעריך קלוריות וחלבון.' : 'המחשבון יעריך קלוריות וחלבון לפי מאכלים נפוצים.'} אפשר לתקן אחר כך.</p>
       ${S.favBusy ? '<div class="thinking"><span class="dots"><i></i><i></i><i></i></span>מעריך ערכים…</div>' : ''}
       <div class="row"><button class="btn" onclick="saveFav()" ${S.favBusy ? 'disabled' : ''}>שמור במועדפים</button><button class="btn-ghost muted" onclick="closeSheet()">ביטול</button></div>`;
   } else if (s.type === 'manual') {
@@ -790,7 +929,7 @@ function renderCoach() {
   if (!aiOn()) {
     return `<section class="card"><h2>המאמן לא זמין כרגע</h2><p>${S.aiOff
       ? 'הבינה המלאכותית לא מאושרת בדף הזה. אפשר לאשר אותה בתפריט ההרשאות של הדף ולרענן.'
-      : 'המאמן עובד כשפותחים את צלחת דרך Claude. אפשר בינתיים לרשום אוכל ולקבל ציון כרגיל.'}</p></section>`;
+      : 'המאמן עובד רק כשפותחים את צלחת דרך Claude. כאן אפשר לרשום אוכל ולקבל ציון כרגיל.'}</p>${S.aiOff ? '' : `<div><a class="btn" style="display:inline-block;text-decoration:none" href="${CLAUDE_URL}" target="_blank" rel="noopener">לגרסה עם המאמן</a></div>`}</section>`;
   }
   const msgs = S.chat.map(m => `<div class="msg ${m.role}">${m.role === 'user' ? esc(m.content) : md(m.content)}</div>`).join('');
   const stream = S.coachBusy ? `<div class="msg assistant" id="stream">${S.stream ? md(S.stream) : '<span class="thinking"><span class="dots"><i></i><i></i><i></i></span>חושב…</span>'}</div>` : '';
@@ -881,7 +1020,11 @@ async function boot() {
   try { Object.assign(S, await Store.loadAll()); } catch (e) { S.loadError = true; }
   S.ready = true; render();
   const ai = await aiP;
-  if (ai) { S.ai = ai; render(); }
+  if (ai) {
+    S.ai = ai;
+    try { const lim = await ai.limits(); S.imgOK = !!(lim && lim.images); } catch (e) { S.imgOK = false; }
+    render();
+  }
 }
 boot();
 </script>
