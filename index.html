@@ -1,0 +1,888 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#FBF7F3"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="צלחת"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>צלחת</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap">
+<style>
+/* Layout: warm, bright gym-app feel. One column of soft white cards on a warm ground; deep red leads, orange supports; near-black only for text. Each screen shows one main thing, details open on demand. */
+:root{
+  --bg:#FBF7F3; --card:#FFFFFF; --ink:#2A1D1A; --muted:#8A7670; --line:#F0E6DF;
+  --red:#A3171F; --red-soft:#FBE7E5; --orange:#E8692F; --orange-soft:#FDEDE2; --on-red:#FFFFFF;
+  --f:"Rubik","Segoe UI","Arial Hebrew",Arial,sans-serif;
+  --r-card:18px; --r-btn:10px; --nav-h:64px;
+  --shadow:0 1px 2px rgba(42,29,26,.05),0 8px 24px rgba(42,29,26,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top-in{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding-block:18px 4px}
+.brand{font-weight:900;font-size:1.95rem;line-height:1;color:var(--red);letter-spacing:-.01em}
+.hello{font-size:.92rem;color:var(--muted);text-align:end;line-height:1.3}
+.hello b{display:block;color:var(--ink);font-weight:700}
+main{padding-block:12px calc(var(--nav-h) + 36px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+h2{font-size:1.15rem;font-weight:800;margin:0;line-height:1.25;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;display:inline-block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.card{background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:14px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+
+/* score ring */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.ring{position:relative;width:118px;height:118px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--red-soft)}
+.ring .prog{stroke:var(--red);transition:stroke-dashoffset .7s ease}
+.ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-in b{font-size:2.3rem;font-weight:900;line-height:1}
+.ring-in span{font-size:.72rem;color:var(--muted)}
+.hero-side{display:flex;flex-direction:column;gap:4px;min-width:0}
+.grade{font-size:1.3rem;font-weight:800;color:var(--red);line-height:1.2}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--bg);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat .k{font-size:.76rem;color:var(--muted);font-weight:500}
+.stat .v{font-weight:800;font-size:1.05rem;line-height:1.2}
+.stat .v small{font-weight:500;color:var(--muted);font-size:.74rem}
+.pbar{height:7px;background:var(--red-soft);border-radius:6px;overflow:hidden}
+.pbar>i{display:block;height:100%;background:var(--red);border-radius:6px}
+.pbar.or{background:var(--orange-soft)}
+.pbar.or>i{background:var(--orange)}
+.brk{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+.brk-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.brk-row .pbar{grid-column:1/-1}
+.brk-row .pts{font-size:.85rem;color:var(--muted)}
+.brk-row .sub{grid-column:1/-1;font-size:.82rem;color:var(--muted);margin-top:-2px}
+
+/* controls */
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{background:var(--red);color:var(--on-red);border:0;border-radius:var(--r-btn);padding:12px 18px;font-weight:700;box-shadow:0 3px 0 rgba(110,12,18,.28)}
+.btn:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(110,12,18,.28)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn-soft{background:var(--red-soft);color:var(--red);border:0;border-radius:var(--r-btn);padding:10px 14px;font-weight:700}
+.btn-soft:disabled{opacity:.45;cursor:default}
+.btn-ghost{background:none;border:0;color:var(--red);font-weight:700;padding:6px 2px}
+.btn-ghost.muted{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--card);border-radius:8px;padding:6px 12px;font-weight:600;font-size:.88rem;color:var(--muted)}
+.chip.on{border-color:var(--red);background:var(--red-soft);color:var(--red)}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+input,select,.in{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea.in{resize:vertical;min-height:90px}
+input:focus,select:focus,.in:focus{border-color:var(--red);outline:none}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field>span{font-size:.82rem;font-weight:600;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.check{display:flex;gap:10px;align-items:center;font-weight:500}
+.check input{width:22px;height:22px;accent-color:var(--red);flex:none}
+
+/* ask the AI */
+.ask{display:flex;gap:8px;align-items:flex-end;background:var(--bg);border:2px solid var(--line);border-radius:14px;padding:6px}
+.ask:focus-within{border-color:var(--red)}
+.ask textarea{flex:1;min-width:0;border:0;background:transparent;resize:none;font:inherit;font-size:16px;padding:8px;min-height:46px;max-height:150px;color:var(--ink);outline:none;line-height:1.4}
+.ask .btn{padding:11px 16px;flex:none}
+.thinking{display:flex;align-items:center;gap:8px;color:var(--red);font-weight:600;font-size:.9rem}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}
+.dots i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+/* favorites */
+.favs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.fav{position:relative;background:var(--bg);border:0;border-radius:14px;padding:10px 6px;min-height:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;min-width:0}
+.fav b{font-size:.84rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.fav small{font-size:.72rem;color:var(--muted)}
+.fav:active{transform:scale(.97)}
+.fav.add{border:2px dashed #E6D3CA;background:transparent;color:var(--red)}
+.fav.add .plus{font-size:1.9rem;font-weight:400;line-height:1}
+.fav.add small{color:var(--red);opacity:.8}
+.fav .x{position:absolute;top:4px;inset-inline-end:4px;width:24px;height:24px;border-radius:6px;border:0;background:var(--red);color:var(--on-red);font-size:.8rem;line-height:1;display:flex;align-items:center;justify-content:center}
+
+/* food log */
+.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.item{display:flex;gap:10px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);background:none;border-inline:0;border-top:0;text-align:start;width:100%}
+.item:last-child{border-bottom:0}
+.item-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.item-name{font-weight:600;overflow-wrap:anywhere}
+.item-meta{font-size:.82rem;color:var(--muted)}
+.item-p{font-weight:800;color:var(--red);font-size:.95rem;white-space:nowrap}
+.meal-name{font-size:.78rem;font-weight:700;color:var(--muted);margin-top:6px}
+.tag{font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-inline-start:6px;white-space:nowrap;vertical-align:1px}
+.tag.veg{background:var(--orange-soft);color:var(--orange)}
+.tag.junk{background:var(--red-soft);color:var(--red)}
+
+.water{display:flex;align-items:center;gap:12px}
+.step{width:42px;height:42px;border-radius:10px;border:0;background:var(--red-soft);color:var(--red);font-size:1.35rem;font-weight:700;line-height:1}
+.drops{display:flex;gap:3px;flex:1;min-width:0}
+.drops i{flex:1;height:22px;border-radius:5px;background:var(--orange-soft);max-width:22px}
+.drops i.on{background:var(--orange)}
+
+/* week */
+.wchart{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:150px}
+.wbar{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;padding:0;min-width:0}
+.wbar:disabled{cursor:default;opacity:.45}
+.wnum{font-size:.74rem;font-weight:700;color:var(--muted);min-height:1.1em}
+.wcol{flex:1;width:100%;max-width:30px;background:var(--red-soft);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
+.wcol i{display:block;width:100%;background:var(--red);border-radius:8px}
+.wcol.sick{background:repeating-linear-gradient(45deg,var(--orange-soft) 0 6px,#fff 6px 12px)}
+.wlab{font-size:.78rem;font-weight:600;color:var(--muted)}
+.wbar.today .wlab{color:var(--red)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--bg);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.tile .k{font-size:.78rem;color:var(--muted)}
+.tile .v{font-weight:800;font-size:1.3rem;line-height:1.2}
+.tile .v small{font-size:.78rem;font-weight:500;color:var(--muted)}
+.tip{background:var(--orange-soft);border-radius:var(--r-card);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.tip b{color:var(--orange)}
+
+/* coach */
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{padding:10px 14px;max-width:88%;overflow-wrap:anywhere;border-radius:16px}
+.msg.user{align-self:flex-end;background:var(--red);color:var(--on-red);white-space:pre-wrap;border-end-end-radius:4px}
+.msg.assistant{align-self:flex-start;background:var(--card);box-shadow:var(--shadow);border-end-start-radius:4px}
+.msg p{margin:0 0 6px}
+.msg p:last-child{margin:0}
+.msg ul{margin:4px 0 6px;padding-inline-start:20px}
+.sugg{display:flex;flex-direction:column;gap:8px}
+.sugg button{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:start;font-weight:500}
+.composer{position:sticky;bottom:calc(var(--nav-h) + 8px + env(safe-area-inset-bottom,0px));padding-top:6px}
+.composer .ask{background:var(--card);box-shadow:var(--shadow)}
+
+.locked{align-items:flex-start}
+.lock-ico{width:44px;height:44px;border-radius:12px;background:var(--red-soft);color:var(--red);display:flex;align-items:center;justify-content:center}
+.lock-ico svg{width:22px;height:22px}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(42,29,26,.38);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding-top:12px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px;max-height:88vh;overflow:auto;animation:up .22s ease-out}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);align-self:center}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+
+/* nav */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:10;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs-in{display:grid;grid-template-columns:repeat(4,1fr);max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tabs button{height:var(--nav-h);background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-weight:600;font-size:.78rem}
+.tabs svg{width:23px;height:23px}
+.tabs button.on{color:var(--red)}
+.toast{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom,0px));margin:0 auto;width:min(488px,calc(100% - 32px));background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;z-index:30;font-weight:500;box-shadow:var(--shadow)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head><body>
+<div id="app" dir="rtl" lang="he">
+  <header class="wrap"><div class="top-in"><span class="brand">צלחת</span><span class="hello" id="hello"></span></div></header>
+  <main id="main" class="wrap"><p class="muted">טוען…</p></main>
+  <div id="sheet-root"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <nav class="tabs" aria-label="מסכים"><div class="tabs-in">
+    <button data-tab="today" onclick="go('today')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/></svg>היום</button>
+    <button data-tab="week" onclick="go('week')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></svg>שבוע</button>
+    <button data-tab="coach" onclick="go('coach')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>מאמן</button>
+    <button data-tab="profile" onclick="go('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>פרופיל</button>
+  </div></nav>
+</div>
+
+<script>
+document.documentElement.lang = 'he';
+document.documentElement.dir = 'rtl';
+
+const MEALS = { breakfast: 'בוקר', lunch: 'צהריים', dinner: 'ערב', snack: 'נשנוש' };
+const GOALS = { gain: 'עלייה במסת שריר', keep: 'שמירה על המשקל', lose: 'ירידה הדרגתית באחוזי שומן' };
+const PARTS = { protein: ['חלבון', 35], kcal: ['קלוריות', 25], veg: ['ירקות ופירות', 20], water: ['מים', 10], junk: ['בלי ג׳אנק', 10] };
+const TIPS = {
+  protein: 'תכניס מקור חלבון לכל ארוחה: ביצים, קוטג׳, עוף, טונה או יוגורט חלבון. ככה מגיעים ליעד בלי ארוחה ענקית אחת.',
+  kcal: 'הקלוריות לא היו בטווח. אם אתה מתחת, תוסיף נשנוש קבוע כמו פיתה עם טחינה, בננה עם חמאת בוטנים או כוס חלב.',
+  veg: 'סלט או פרי בשתי ארוחות ביום, וזה כבר מסתדר.',
+  water: 'תחזיק בקבוק ליד, ותשתה כוס עם כל ארוחה.',
+  junk: 'היה הרבה ג׳אנק השבוע. לא צריך לוותר על הכול, רק להחליף חלק בנשנוש עם חלבון.'
+};
+const FAV_SLOTS = 4;
+const LS_KEY = 'tzalachat.v1';
+
+const S = {
+  ready: false, loadError: false, mode: 'local',
+  profile: null, days: {}, weights: [], chat: [], favs: [],
+  tab: 'today', lastTab: null, date: todayKey(), weekRef: todayKey(), meal: defaultMeal(),
+  showBreak: false, showLog: false, favEdit: false, sheet: null, profileOpen: false,
+  ai: null, aiOff: false, aiBusy: false, favBusy: false, coachBusy: false, coachCtl: null, stream: '',
+  clearIds: new Set()
+};
+
+// ---------- עזרים ----------
+function fmt(dt) { return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); }
+function todayKey() { return fmt(new Date()); }
+function parseKey(k) { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDays(k, n) { const d = parseKey(k); d.setDate(d.getDate() + n); return fmt(d); }
+function weekStart(k) { return addDays(k, -parseKey(k).getDay()); } // השבוע מתחיל ביום ראשון
+function dayName(k, style) { return parseKey(k).toLocaleDateString('he-IL', { weekday: style || 'long' }); }
+function shortDate(k) { const d = parseKey(k); return d.getDate() + '.' + (d.getMonth() + 1); }
+function defaultMeal() { const h = new Date().getHours(); return h < 11 ? 'breakfast' : h < 16 ? 'lunch' : h < 22 ? 'dinner' : 'snack'; }
+function greeting() { const h = new Date().getHours(); return h < 5 ? 'לילה טוב' : h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : h < 21 ? 'ערב טוב' : 'לילה טוב'; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function num(v, min, max) { v = Number(v); if (!isFinite(v)) v = 0; return Math.min(max, Math.max(min, Math.round(v))); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function blankDay() { return { foods: [], water: 0, type: 'regular', trained: false }; }
+function ensureDay(k) { if (!S.days[k]) S.days[k] = blankDay(); return S.days[k]; }
+function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function checked(id) { const el = document.getElementById(id); return !!(el && el.checked); }
+function grade(n) { return n >= 85 ? 'יום מצוין' : n >= 70 ? 'יום טוב' : n >= 50 ? 'בדרך הנכונה' : 'יש עוד מה להוסיף'; }
+function k1(n) { return n >= 1000 ? n.toLocaleString('en-US') : String(n); }
+function aiOn() { return !!S.ai && !S.aiOff; }
+
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3200);
+}
+
+// ---------- יעדים וציון ----------
+function targets(p) {
+  if (!p || !p.weight || !p.height || !p.age) return null;
+  const w = +p.weight, h = +p.height, a = +p.age;
+  const bmr = 10 * w + 6.25 * h - 5 * a + (p.sex === 'f' ? -161 : 5); // Mifflin-St Jeor
+  const td = +p.trainDays || 0;
+  const factor = td >= 5 ? 1.7 : td >= 3 ? 1.55 : td >= 1 ? 1.45 : 1.35;
+  const adj = p.goal === 'gain' ? 300 : p.goal === 'lose' ? -300 : 0;
+  let kcal = Math.round((bmr * factor + adj) / 50) * 50;
+  if (+p.kcalOverride) kcal = +p.kcalOverride;
+  let protein = Math.round(w * 1.8 / 5) * 5;
+  if (+p.proteinOverride) protein = +p.proteinOverride;
+  return { kcal, kcalMin: kcal - 150, kcalMax: kcal + 150, protein, veg: 5, water: 10 };
+}
+function dayTotals(d) {
+  let kcal = 0, protein = 0, veg = 0, junk = 0;
+  for (const f of d.foods) { kcal += f.kcal; protein += f.protein; veg += f.veg || 0; junk += f.junk ? 1 : 0; }
+  return { kcal, protein, veg, junk, water: d.water || 0 };
+}
+// 35 חלבון, 25 קלוריות, 20 ירקות ופירות, 10 מים, 10 בלי ג'אנק. יום מחלה לא מקבל ציון.
+function dayScore(d, T) {
+  if (!d || !T || d.type === 'sick' || !d.foods.length) return null;
+  const t = dayTotals(d), out = d.type === 'out';
+  const max = T.kcalMax + (out ? 500 : 0);
+  const off = t.kcal < T.kcalMin ? T.kcalMin - t.kcal : t.kcal > max ? t.kcal - max : 0;
+  const parts = {
+    protein: Math.min(t.protein / T.protein, 1) * 35,
+    kcal: Math.max(0, 25 - off / 15),
+    veg: Math.min(t.veg / T.veg, 1) * 20,
+    water: Math.min(t.water / T.water, 1) * 10,
+    junk: Math.max(0, 10 - 5 * Math.max(0, t.junk - (out ? 1 : 0)))
+  };
+  const total = Math.round(Object.values(parts).reduce((a, b) => a + b, 0));
+  return { total, parts, t, max };
+}
+function weekData(T) {
+  const start = weekStart(S.weekRef), days = [];
+  for (let i = 0; i < 7; i++) { const k = addDays(start, i), d = S.days[k]; days.push({ k, d, sc: dayScore(d, T) }); }
+  const scored = days.filter(x => x.sc);
+  const avg = f => scored.length ? scored.reduce((a, x) => a + f(x), 0) / scored.length : 0;
+  let weakest = null;
+  if (scored.length) {
+    let min = 2;
+    for (const p in PARTS) { const f = avg(x => x.sc.parts[p]) / PARTS[p][1]; if (f < min) { min = f; weakest = p; } }
+    if (min >= 0.9) weakest = null;
+  }
+  return {
+    start, days, scored, weakest,
+    score: scored.length ? Math.round(avg(x => x.sc.total)) : null,
+    protein: Math.round(avg(x => x.sc.t.protein)),
+    proteinHits: scored.filter(x => x.sc.t.protein >= T.protein).length,
+    veg: avg(x => x.sc.t.veg), water: avg(x => x.sc.t.water),
+    trained: days.filter(x => x.d && x.d.trained).length,
+    sick: days.filter(x => x.d && x.d.type === 'sick').length
+  };
+}
+
+// ---------- שמירה: חשבון Claude (פרטי) או הדפדפן ----------
+const Store = {
+  mode: 'local', col: null,
+  async init() {
+    if (!window.claude || typeof claude.use !== 'function') return;
+    try {
+      const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+      const id = user ? await user.id() : null;
+      if (db && id) { this.col = db.collection('data/users/' + id); this.mode = 'cloud'; }
+    } catch (e) { /* נשארים בדפדפן */ }
+  },
+  async loadAll() {
+    const out = { profile: null, days: {}, weights: [], chat: [], favs: [] };
+    if (this.mode === 'cloud') {
+      const snap = await this.col.limit(1000).get();
+      for (const doc of snap.docs) if (doc.exists) apply(out, doc.id, doc.data());
+    } else {
+      for (const [k, v] of Object.entries(readLocal())) apply(out, k, v);
+    }
+    return out;
+  },
+  async write(key, value) {
+    if (this.mode === 'cloud') return this.col.doc(key).set(value);
+    const all = readLocal(); all[key] = value;
+    localStorage.setItem(LS_KEY, JSON.stringify(all));
+  }
+};
+function readLocal() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function cleanFood(f, meal) {
+  return {
+    id: String(f.id || '').replace(/[^a-z0-9]/gi, '') || uid(),
+    name: String(f.name || 'פריט').slice(0, 80),
+    kcal: num(f.kcal, 0, 5000), protein: num(f.protein, 0, 300), veg: num(f.veg, 0, 10),
+    junk: f.junk === true, meal: MEALS[meal || f.meal] ? (meal || f.meal) : 'snack'
+  };
+}
+function apply(out, key, v) {
+  v = JSON.parse(JSON.stringify(v || {}));
+  if (key === 'profile') out.profile = v;
+  else if (key === 'weights') out.weights = (v.list || []).filter(w => /^\d{4}-\d{2}-\d{2}$/.test(w.date) && isFinite(w.kg));
+  else if (key === 'chat') out.chat = (v.turns || []).filter(t => (t.role === 'user' || t.role === 'assistant') && t.content);
+  else if (key === 'favs') out.favs = (v.list || []).map(f => cleanFood(f)).slice(0, 24);
+  else if (/^d-\d{4}-\d{2}-\d{2}$/.test(key)) out.days[key.slice(2)] = {
+    type: ['regular', 'out', 'sick'].includes(v.type) ? v.type : 'regular',
+    water: num(v.water, 0, 30), trained: !!v.trained,
+    foods: (v.foods || []).map(f => cleanFood(f))
+  };
+}
+const timers = {}, chains = {};
+function save(key) {
+  clearTimeout(timers[key]);
+  timers[key] = setTimeout(() => {
+    const value = JSON.parse(JSON.stringify(
+      key === 'profile' ? S.profile : key === 'weights' ? { list: S.weights } : key === 'chat' ? { turns: S.chat }
+        : key === 'favs' ? { list: S.favs } : S.days[key.slice(2)]
+    ));
+    chains[key] = (chains[key] || Promise.resolve())
+      .then(() => Store.write(key, value))
+      .catch(e => toast(e && e.code === 'quota_exceeded' ? 'נגמר המקום לשמירה.' : 'השמירה נכשלה. בדוק חיבור ונסה שוב.'));
+  }, 400);
+}
+
+// ---------- בינה מלאכותית: הערכת אוכל ----------
+const FOOD_RULES = `אתה עוזר תזונה לנער מתאמן בישראל. הערך ערכים תזונתיים בקירוב, לא צריך דיוק מושלם, רק מספרים הגיוניים.
+אם לא נכתבה כמות, הנח מנה רגילה של נער מתאמן. אם נכתב מאכל ביתי או ממסעדה, הערך לפי מתכון נפוץ בישראל.
+לכל פריט:
+- name: שם קצר בעברית כולל הכמות
+- kcal: קלוריות, מספר שלם
+- protein: גרם חלבון, מספר שלם
+- veg: מספר מנות ירקות או פירות בפריט (0, 1, 2...). מנה היא בערך 80 גרם, ירק או פרי בינוני, או קערית סלט קטנה
+- junk: true לג׳אנק פוד, ממתקים, חטיפים מתוקים או מלוחים, שתייה ממותקת או מטוגן עמוק. אחרת false`;
+
+async function estimateItems(text) {
+  const items = await S.ai.json(`${FOOD_RULES}
+פרק את מה שהמשתמש כתב לפריטים נפרדים. החזר רק מערך JSON, לדוגמה:
+[{"name":"2 ביצים מקושקשות","kcal":180,"protein":13,"veg":0,"junk":false}]
+
+מה המשתמש אכל:
+${text.slice(0, 2000)}`, { modelTier: 'quick' });
+  if (!Array.isArray(items) || !items.length) throw { code: 'invalid_json' };
+  return items.slice(0, 25);
+}
+async function estimateOne(text) {
+  const r = await S.ai.json(`${FOOD_RULES}
+המשתמש רוצה לשמור מאכל שהוא אוכל הרבה, כפריט אחד. אם יש כמה רכיבים, חבר אותם לפריט אחד. החזר רק אובייקט JSON אחד, לדוגמה:
+{"name":"טוסט גבינה צהובה","kcal":380,"protein":20,"veg":0,"junk":false}
+
+המאכל:
+${text.slice(0, 300)}`, { modelTier: 'quick' });
+  const o = Array.isArray(r) ? r.reduce((a, x) => ({ name: text, kcal: a.kcal + (+x.kcal || 0), protein: a.protein + (+x.protein || 0), veg: a.veg + (+x.veg || 0), junk: a.junk || x.junk === true }), { kcal: 0, protein: 0, veg: 0, junk: false }) : r;
+  if (!o || typeof o !== 'object' || !isFinite(+o.kcal)) throw { code: 'invalid_json' };
+  return o;
+}
+function aiErr(e) {
+  const c = e && e.code;
+  if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(c)) {
+    S.aiOff = true; return 'הבינה המלאכותית לא מאושרת בדף הזה. אפשר לאשר אותה בתפריט ההרשאות של הדף, או להכניס ערכים ידנית.';
+  }
+  if (c === 'rate_limited') return 'יותר מדי בקשות כרגע. נסה שוב בעוד כמה דקות.';
+  if (c === 'session_expired') return 'צריך להתחבר מחדש ל-Claude.';
+  if (c === 'invalid_json') return 'לא הצלחתי להבין. נסה לכתוב פשוט יותר, למשל ״2 ביצים ופיתה״.';
+  if (c === 'refused') return 'הבקשה לא התקבלה. נסה לנסח אחרת.';
+  if (c === 'prompt_too_large') return 'הטקסט ארוך מדי. נסה לקצר.';
+  return 'משהו השתבש בחיבור. נסה שוב.';
+}
+
+// ---------- פעולות ----------
+function go(tab) {
+  if (tab !== 'profile') S.profileOpen = false;
+  S.tab = tab; S.sheet = null; render(); window.scrollTo(0, 0);
+  if (tab === 'coach') scrollChat();
+}
+function shiftDay(n) { const k = addDays(S.date, n); if (k > todayKey()) return; S.date = k; render(); }
+function openDay(k) { S.date = k; go('today'); }
+function shiftWeek(n) { const k = addDays(S.weekRef, 7 * n); if (weekStart(k) > todayKey()) return; S.weekRef = k; render(); }
+function setType(t) { ensureDay(S.date).type = t; save('d-' + S.date); render(); }
+function setMeal(m) { S.meal = m; render(); }
+function water(n) { const d = ensureDay(S.date); d.water = num((d.water || 0) + n, 0, 30); save('d-' + S.date); render(); }
+function toggleTrained() { const d = ensureDay(S.date); d.trained = !d.trained; save('d-' + S.date); render(); }
+function toggle(key) { S[key] = !S[key]; render(); }
+function openSheet(s) { S.sheet = s; render(); setTimeout(() => { const el = document.querySelector('#sheet-root input, #sheet-root textarea'); if (el) el.focus(); }, 60); }
+function closeSheet() { S.sheet = null; render(); }
+
+async function askAdd() {
+  const text = val('ask').trim();
+  if (!text || S.aiBusy) return;
+  if (!aiOn()) { S.clearIds.add('ask'); openSheet({ type: 'manual', name: text.slice(0, 80) }); return; }
+  S.aiBusy = true; render();
+  try {
+    const items = await estimateItems(text);
+    const d = ensureDay(S.date);
+    let p = 0;
+    for (const it of items) { const f = cleanFood(it, S.meal); f.id = uid(); d.foods.push(f); p += f.protein; }
+    save('d-' + S.date);
+    S.clearIds.add('ask');
+    toast(items.length === 1 ? `נוסף: ${items[0].name} · ${p} ג׳ חלבון` : `נוספו ${items.length} פריטים · ${p} ג׳ חלבון`);
+  } catch (e) {
+    toast(aiErr(e));
+  } finally {
+    S.aiBusy = false; render();
+  }
+}
+function addManual() {
+  const name = val('m-name').trim();
+  if (!name) { toast('כתוב שם למאכל'); return; }
+  ensureDay(S.date).foods.push({ id: uid(), name: name.slice(0, 80), kcal: num(val('m-kcal'), 0, 5000), protein: num(val('m-protein'), 0, 300), veg: num(val('m-veg'), 0, 10), junk: checked('m-junk'), meal: S.meal });
+  save('d-' + S.date); S.sheet = null; toast('נוסף: ' + name); render();
+}
+function addFav(id) {
+  if (S.favEdit) return;
+  const f = S.favs.find(x => x.id === id);
+  if (!f) return;
+  ensureDay(S.date).foods.push({ ...f, id: uid(), meal: S.meal });
+  save('d-' + S.date); toast(`נוסף: ${f.name} · ${f.protein} ג׳ חלבון`); render();
+}
+async function saveFav() {
+  const name = val('f-name').trim();
+  if (!name) { toast('כתוב מה אתה אוהב לאכול'); return; }
+  const manual = val('f-kcal') !== '' || val('f-protein') !== '';
+  let item;
+  if (manual || !aiOn()) {
+    if (!manual) { toast('תכניס קלוריות וחלבון'); return; }
+    item = { name, kcal: val('f-kcal'), protein: val('f-protein'), veg: 0, junk: false };
+  } else {
+    S.favBusy = true; render();
+    try { item = await estimateOne(name); item.name = item.name || name; }
+    catch (e) { S.favBusy = false; toast(aiErr(e)); render(); return; }
+    S.favBusy = false;
+  }
+  const f = cleanFood(item); f.id = uid(); delete f.meal;
+  S.favs.push(f); save('favs');
+  S.sheet = null; toast(`נשמר במועדפים: ${f.name} · ${f.kcal} קל׳ · ${f.protein} ג׳ חלבון`); render();
+}
+function removeFav(id) { S.favs = S.favs.filter(f => f.id !== id); save('favs'); if (!S.favs.length) S.favEdit = false; render(); }
+function delFood(id) { const d = ensureDay(S.date); d.foods = d.foods.filter(f => f.id !== id); save('d-' + S.date); S.sheet = null; render(); }
+function saveEdit() {
+  const f = ensureDay(S.date).foods.find(x => x.id === (S.sheet && S.sheet.id));
+  if (f) {
+    f.name = (val('e-name').trim() || f.name).slice(0, 80);
+    f.kcal = num(val('e-kcal'), 0, 5000); f.protein = num(val('e-protein'), 0, 300);
+    f.veg = num(val('e-veg'), 0, 10); f.junk = checked('e-junk');
+    save('d-' + S.date);
+  }
+  S.sheet = null; render();
+}
+function favFromItem(id) {
+  const f = ensureDay(S.date).foods.find(x => x.id === id);
+  if (!f) return;
+  const c = cleanFood(f); c.id = uid(); delete c.meal;
+  S.favs.push(c); save('favs'); S.sheet = null; toast('נשמר במועדפים'); render();
+}
+
+// ---------- מאמן ----------
+function summ(d) {
+  const t = dayTotals(d), sc = dayScore(d, targets(S.profile));
+  return `${t.kcal} קל׳, ${t.protein} ג׳ חלבון, ${t.veg} מנות ירק/פרי, ${t.water} כוסות מים, ${t.junk} ג׳אנק${sc ? `, ציון ${sc.total}` : ''}`;
+}
+function coachContext() {
+  const p = S.profile, T = targets(p), tk = todayKey(), now = new Date();
+  const L = [];
+  L.push(`היום ${dayName(tk)} ${shortDate(tk)}, השעה ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}.`);
+  if (p) L.push(`פרופיל: גיל ${p.age}, ${p.sex === 'f' ? 'בת' : 'בן'}, גובה ${p.height} ס״מ, משקל ${p.weight} ק״ג${p.bodyFat ? `, בערך ${p.bodyFat}% שומן` : ''}, ${p.trainDays} אימונים בשבוע, מטרה: ${GOALS[p.goal] || GOALS.gain}.`);
+  if (T) L.push(`יעדים יומיים: חלבון ${T.protein} ג׳, קלוריות ${T.kcalMin}–${T.kcalMax}, ${T.veg} מנות ירקות ופירות, ${T.water} כוסות מים.`);
+  if (p && p.notes) L.push(`מה שהוא ביקש שתדע עליו: ${p.notes}`);
+  if (S.favs.length) L.push('מאכלים שהוא אוהב: ' + S.favs.map(f => f.name).join(', ') + '.');
+  const d = S.days[tk];
+  if (d && d.foods.length) L.push(`מה אכל היום${d.type === 'out' ? ' (יום בחוץ)' : ''}${d.type === 'sick' ? ' (חולה)' : ''}: ` + d.foods.map(f => `${f.name} (${f.kcal} קל׳, ${f.protein} ג׳ חלבון)`).join('; ') + `. סה״כ: ${summ(d)}.`);
+  else L.push('היום עוד לא רשם אוכל.');
+  const past = [];
+  for (let i = 1; i <= 6; i++) {
+    const k = addDays(tk, -i), x = S.days[k];
+    if (x && (x.foods.length || x.type === 'sick')) past.push(`${dayName(k)} ${shortDate(k)}: ${x.type === 'sick' ? 'חולה' : summ(x)}${x.type === 'out' ? ' (בחוץ)' : ''}`);
+  }
+  if (past.length) L.push('הימים האחרונים:\n' + past.join('\n'));
+  const lw = S.weights.slice(-4);
+  if (lw.length) L.push('שקילות אחרונות: ' + lw.map(w => `${shortDate(w.date)}: ${w.kg} ק״ג`).join(', '));
+
+  return `אתה המאמן באפליקציית ״צלחת״: מאמן תזונה אישי למתאמן צעיר${p ? ` בן ${p.age}` : ''} שמתאמן בחדר כושר, רוצה לעלות במסת שריר ולהיות בריא יותר.
+איך לענות:
+- עברית, בגובה העיניים, קצר ומעשי. עד 120 מילים בערך, אלא אם ביקש פירוט.
+- הדגש הוא אוכל ובריאות, ובמיוחד חלבון. על אימונים רק אם הוא שואל.
+- תן דוגמאות מאוכל ישראלי שקל להשיג: סופר, מכולת, קיוסק בתחנת דלק, שווארמה, פלאפל, מסעדה, אוכל בבית. כשאפשר, תשתמש במאכלים שהוא אוהב.
+- כשהוא בטיול, בצפון או אוכל בחוץ עם חברים: תן אפשרויות שאפשר באמת להשיג שם, בלי לחץ ובלי אשמה. יום או יומיים בחוץ לא הורסים את ההתקדמות.
+- תשתמש בנתונים שלמטה כשזה רלוונטי, ותגיד בפשטות מה חסר לו כדי להגיע ליעד היום.
+בטיחות:
+- בלי דיאטות קיצוניות, צומות או ירידה מהירה במשקל.
+- בלי המלצה על תוספים, חוץ מאבקת חלבון כתחליף לאוכל. על כל תוסף אחר: להתייעץ עם רופא או דיאטנית.
+- אתה לא רופא. על מחלה, כאבים, סחרחורות, ירידה במשקל שלא מוסברת או כל שאלה רפואית אחרת: תמליץ לפנות לרופא.
+- אם עולה סימן לקושי עם אוכל או עם דימוי גוף, תגיב ברגישות ותמליץ לדבר עם מבוגר שהוא סומך עליו או עם רופא.
+
+הנתונים שלו:
+${L.join('\n')}`;
+}
+function suggestions() {
+  const T = targets(S.profile);
+  return [
+    'אני נוסע לצפון ליומיים. מה לאכול שם כדי לא לפספס חלבון?',
+    'אני יוצא לאכול עם חברים הערב. מה כדאי להזמין?',
+    'מה חסר לי היום כדי להגיע ליעד?',
+    T ? `איך מגיעים ל-${T.protein} גרם חלבון ביום בלי שייקים?` : 'תן לי רעיונות לארוחת בוקר עם הרבה חלבון'
+  ];
+}
+async function coachSend(preset) {
+  const text = (preset || val('coach-input')).trim();
+  if (!text || S.coachBusy || !aiOn()) return;
+  S.chat.push({ role: 'user', content: text.slice(0, 2000) });
+  if (!preset) S.clearIds.add('coach-input');
+  S.coachBusy = true; S.stream = ''; render(); scrollChat();
+  const ctl = new AbortController(); S.coachCtl = ctl;
+  const turns = [{ role: 'user', content: coachContext() }, ...S.chat.slice(-20)];
+  try {
+    const res = await S.ai(turns, {
+      cache: false, signal: ctl.signal,
+      onText: ({ text }) => { S.stream = text; const el = document.getElementById('stream'); if (el) { el.innerHTML = md(text); scrollChat(); } }
+    });
+    S.chat.push({ role: 'assistant', content: res.text });
+  } catch (e) {
+    if (e && e.text) S.chat.push({ role: 'assistant', content: e.text });
+    if (!e || e.code !== 'cancelled') toast(aiErr(e));
+  } finally {
+    S.coachBusy = false; S.coachCtl = null; S.stream = '';
+    S.chat = S.chat.slice(-40); save('chat'); render(); scrollChat();
+  }
+}
+function clearChat() { S.chat = []; save('chat'); render(); }
+function scrollChat() { requestAnimationFrame(() => { const el = document.getElementById('chat-end'); if (el) el.scrollIntoView({ block: 'end' }); }); }
+function md(s) {
+  let html = '', inList = false;
+  for (let line of esc(s).split('\n')) {
+    line = line.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+    const m = line.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);
+    if (m) { if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + m[1] + '</li>'; continue; }
+    if (inList) { html += '</ul>'; inList = false; }
+    if (/^#{1,4}\s/.test(line)) line = '<b>' + line.replace(/^#{1,4}\s/, '') + '</b>';
+    if (line.trim()) html += '<p>' + line + '</p>';
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+// ---------- פרופיל ומשקל ----------
+function saveProfile() {
+  const w = Number(val('p-weight'));
+  const p = {
+    age: num(val('p-age'), 0, 100), sex: val('p-sex') === 'f' ? 'f' : 'm',
+    height: num(val('p-height'), 0, 250), weight: Math.round(w * 10) / 10,
+    bodyFat: val('p-bf') ? num(val('p-bf'), 3, 60) : null,
+    trainDays: num(val('p-train'), 0, 7), goal: GOALS[val('p-goal')] ? val('p-goal') : 'gain',
+    proteinOverride: val('p-protein') ? num(val('p-protein'), 40, 300) : null,
+    kcalOverride: val('p-kcal') ? num(val('p-kcal'), 1200, 6000) : null,
+    notes: val('p-notes').slice(0, 1500)
+  };
+  if (p.age < 10 || p.age > 80) { toast('בדוק את הגיל'); return; }
+  if (p.height < 120 || p.height > 230) { toast('בדוק את הגובה (בס״מ)'); return; }
+  if (!(w >= 30 && w <= 250)) { toast('בדוק את המשקל (בק״ג)'); return; }
+  S.profile = p; save('profile');
+  ['p-age', 'p-sex', 'p-height', 'p-weight', 'p-bf', 'p-train', 'p-goal', 'p-protein', 'p-kcal', 'p-notes'].forEach(id => S.clearIds.add(id));
+  toast('הפרופיל נשמר. היעדים עודכנו.'); render();
+}
+function saveWeight() {
+  const v = Number(val('w-kg'));
+  if (!(v >= 30 && v <= 250)) { toast('הכנס משקל בק״ג'); return; }
+  const k = todayKey(), kg = Math.round(v * 10) / 10;
+  S.weights = S.weights.filter(w => w.date !== k);
+  S.weights.push({ date: k, kg });
+  S.weights.sort((a, b) => a.date < b.date ? -1 : 1);
+  save('weights');
+  if (S.profile) { S.profile.weight = kg; save('profile'); S.clearIds.add('p-weight'); }
+  S.clearIds.add('w-kg'); toast('המשקל נשמר'); render();
+}
+function delWeight(date) { S.weights = S.weights.filter(w => w.date !== date); save('weights'); render(); }
+function trendHtml() {
+  const w = S.weights;
+  if (w.length < 2) return '<p class="muted small">אחרי שתי שקילות בהפרש של שבוע תראה כאן את המגמה.</p>';
+  const last = w[w.length - 1];
+  const prev = [...w].reverse().find(e => e.date <= addDays(last.date, -7));
+  if (!prev) return '<p class="muted small">צריך שקילה שהייתה לפחות שבוע לפני האחרונה כדי לראות מגמה.</p>';
+  const days = Math.round((parseKey(last.date) - parseKey(prev.date)) / 864e5);
+  const perWeek = (last.kg - prev.kg) / days * 7;
+  const msg = perWeek > 0.6 ? 'עולה מהר. אם זה נמשך, הורד מעט מהקלוריות כדי שהעלייה תהיה בעיקר שריר.'
+    : perWeek >= 0.1 ? 'עולה לאט. זה הקצב המתאים לבניית שריר.'
+    : perWeek > -0.2 ? 'יציב. אם המטרה היא לעלות, הוסף 150 עד 200 קלוריות ביום.'
+    : 'יורד. אם זה בגלל מחלה, זה יחזור כשתאכל כרגיל. אם זה נמשך, תוסיף אוכל.';
+  return `<div class="tip"><b>שינוי בשבוע: <span class="num">${perWeek > 0 ? '+' : ''}${perWeek.toFixed(1)}</span> ק״ג</b><p class="small">${msg}</p></div>`;
+}
+
+// ---------- תצוגות ----------
+function ring(score) {
+  const r = 50, c = 2 * Math.PI * r, f = score == null ? 0 : score / 100;
+  return `<div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="${r}" fill="none" stroke-width="12"/><circle class="prog" cx="60" cy="60" r="${r}" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - f)).toFixed(1)}"/></svg><div class="ring-in"><b class="num">${score ?? '—'}</b><span>מתוך 100</span></div></div>`;
+}
+function pbar(f, cls) { return `<div class="pbar ${cls || ''}"><i style="width:${Math.max(0, Math.min(1, f)) * 100}%"></i></div>`; }
+function needProfile() {
+  return `<section class="card"><h2>${greeting()}! בוא נתחיל</h2><p>כדי לחשב כמה חלבון וקלוריות אתה צריך, מלא גיל, גובה ומשקל בפרופיל. זה לוקח חצי דקה, והפרטים נשארים מוסתרים שם.</p><div><button class="btn" onclick="S.profileOpen=true;go('profile')">למילוי הפרופיל</button></div></section>`;
+}
+
+function renderToday() {
+  const T = targets(S.profile);
+  if (!T) return needProfile();
+  const k = S.date, isToday = k === todayKey();
+  const d = S.days[k] || blankDay(), sc = dayScore(d, T), t = dayTotals(d);
+  const out = d.type === 'out', sick = d.type === 'sick', max = T.kcalMax + (out ? 500 : 0);
+
+  const dayNav = `<div class="row between"><button class="btn-ghost" onclick="shiftDay(-1)">→ יום קודם</button><b>${isToday ? 'היום' : dayName(k) + ' ' + shortDate(k)}</b><button class="btn-ghost" onclick="shiftDay(1)" ${isToday ? 'disabled style="visibility:hidden"' : ''}>יום הבא ←</button></div>`;
+
+  let hero;
+  if (sick) {
+    hero = `<section class="card"><div class="hero">${ring(null)}<div class="hero-side"><span class="grade">יום מחלה</span><p class="small muted">היום לא מקבל ציון ולא נספר בשבוע. תנוח, תשתה ותאכל מה שאתה מצליח.</p></div></div></section>`;
+  } else {
+    const P = sc ? sc.parts : { protein: 0, kcal: 0, veg: 0, water: 0, junk: 0 };
+    const kcalOff = t.kcal > 0 && (t.kcal < T.kcalMin || t.kcal > max);
+    const left = Math.max(0, T.protein - t.protein);
+    const sub = !d.foods.length ? 'כתוב למטה מה אכלת, והציון יתחיל לעלות.'
+      : left > 0 ? `חסרים לך עוד <b class="num">${left}</b> גרם חלבון היום.` : 'הגעת ליעד החלבון. כל הכבוד!';
+    hero = `<section class="card">
+      <div class="hero">${ring(sc ? sc.total : null)}<div class="hero-side"><span class="grade">${sc ? grade(sc.total) : (isToday ? 'יום חדש' : 'לא נרשם')}</span><p class="small muted">${sub}</p></div></div>
+      <div class="stats">
+        <div class="stat"><span class="k">חלבון</span><span class="v"><span class="num">${t.protein}</span><small> / ${T.protein} ג׳</small></span>${pbar(t.protein / T.protein)}</div>
+        <div class="stat"><span class="k">קלוריות</span><span class="v"><span class="num">${k1(t.kcal)}</span></span>${pbar(t.kcal / T.kcal, 'or')}</div>
+        <div class="stat"><span class="k">ירקות ופירות</span><span class="v"><span class="num">${t.veg}</span><small> / ${T.veg}</small></span>${pbar(t.veg / T.veg, 'or')}</div>
+      </div>
+      <button class="btn-ghost" onclick="toggle('showBreak')" aria-expanded="${S.showBreak}">${S.showBreak ? 'הסתר פירוט ▴' : 'איך מחושב הציון ▾'}</button>
+      ${S.showBreak ? `<div class="brk">
+        ${brk('חלבון', P.protein, 35, `${t.protein} מתוך ${T.protein} גרם`)}
+        ${brk('קלוריות', P.kcal, 25, `${k1(t.kcal)} מתוך טווח של ${k1(T.kcalMin)}–${k1(max)}${kcalOff ? (t.kcal < T.kcalMin ? ', מתחת לטווח' : ', מעל הטווח') : ''}`)}
+        ${brk('ירקות ופירות', P.veg, 20, `${t.veg} מתוך ${T.veg} מנות`)}
+        ${brk('מים', P.water, 10, `${t.water} מתוך ${T.water} כוסות`)}
+        ${brk('בלי ג׳אנק', P.junk, 10, t.junk ? `${t.junk} פריטים${out ? ', אחד חופשי ביום בחוץ' : ''}` : 'אין ג׳אנק')}
+      </div>` : ''}
+    </section>`;
+  }
+
+  const ask = `<section class="card">
+    <div class="card-head"><h2>מה אכלת?</h2></div>
+    <div class="chips" role="group" aria-label="ארוחה">${Object.entries(MEALS).map(([v, l]) => `<button class="chip ${S.meal === v ? 'on' : ''}" aria-pressed="${S.meal === v}" onclick="setMeal('${v}')">${l}</button>`).join('')}</div>
+    <div class="ask"><label class="sr" for="ask">מה אכלת</label><textarea id="ask" class="keep" rows="1" placeholder="למשל: שניצל עם אורז וסלט, וכוס שוקו" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea><button class="btn" onclick="askAdd()" ${S.aiBusy ? 'disabled' : ''}>הוסף</button></div>
+    ${S.aiBusy ? '<div class="thinking"><span class="dots"><i></i><i></i><i></i></span>מחשב קלוריות וחלבון…</div>'
+      : `<p class="small muted">${aiOn() ? 'כתוב בחופשיות. הבינה המלאכותית תעריך בערך, ואפשר לתקן כל פריט.' : 'הבינה המלאכותית לא זמינה כרגע, אז תתבקש להכניס ערכים בעצמך.'}</p>`}
+  </section>`;
+
+  const slots = Math.max(FAV_SLOTS - S.favs.length, 1);
+  const favs = `<section class="card">
+    <div class="card-head"><h2>המועדפים שלי</h2>${S.favs.length ? `<button class="btn-ghost ${S.favEdit ? '' : 'muted'}" onclick="toggle('favEdit')">${S.favEdit ? 'סיום' : 'עריכה'}</button>` : ''}</div>
+    <div class="favs">
+      ${S.favs.map(f => `<div class="fav" role="button" tabindex="0" onclick="addFav('${f.id}')" onkeydown="if(event.key==='Enter')addFav('${f.id}')"><b>${esc(f.name)}</b><small><span class="num">${f.protein}</span> ג׳ חלבון</small>${S.favEdit ? `<button class="x" aria-label="מחק את ${esc(f.name)}" onclick="event.stopPropagation();removeFav('${f.id}')">✕</button>` : ''}</div>`).join('')}
+      ${Array.from({ length: slots }, () => `<button class="fav add" onclick="openSheet({type:'fav'})" aria-label="הוסף מאכל מועדף"><span class="plus">+</span><small>הוסף</small></button>`).join('')}
+    </div>
+    <p class="small muted">${S.favs.length ? 'לחיצה על מאכל מוסיפה אותו להיום.' : 'הוסף מאכלים שאתה אוכל הרבה, ואחר כך תוסיף אותם בלחיצה אחת.'}</p>
+  </section>`;
+
+  const groups = Object.keys(MEALS).map(m => {
+    const items = d.foods.filter(f => f.meal === m);
+    return items.length ? `<div class="meal-name">${MEALS[m]}</div><ul class="items">${items.map(f => `<li><button class="item" onclick="openSheet({type:'edit',id:'${f.id}'})"><span class="item-main"><span class="item-name">${esc(f.name)}${f.veg ? '<span class="tag veg">ירק/פרי</span>' : ''}${f.junk ? '<span class="tag junk">ג׳אנק</span>' : ''}</span><span class="item-meta"><span class="num">${f.kcal}</span> קל׳</span></span><span class="item-p"><span class="num">${f.protein}</span> ג׳</span></button></li>`).join('')}</ul>` : '';
+  }).join('');
+  const log = d.foods.length ? `<section class="card">
+    <div class="card-head"><h2>${isToday ? 'אכלת היום' : 'אכלת ביום הזה'}</h2><button class="btn-ghost" onclick="toggle('showLog')" aria-expanded="${S.showLog}">${S.showLog ? 'הסתר' : `הצג ${d.foods.length} פריטים`}</button></div>
+    ${S.showLog ? `<div>${groups}</div><p class="small muted">לחיצה על פריט פותחת עריכה.</p>` : ''}
+  </section>` : '';
+
+  const drops = Array.from({ length: T.water }, (_, i) => `<i class="${i < t.water ? 'on' : ''}"></i>`).join('');
+  const dayCard = `<section class="card">
+    <div class="card-head"><h2>מים</h2><span class="muted small"><span class="num">${t.water}</span> מתוך ${T.water} כוסות</span></div>
+    <div class="water"><button class="step" aria-label="כוס אחת פחות" onclick="water(-1)">−</button><div class="drops" aria-hidden="true">${drops}</div><button class="step" aria-label="עוד כוס" onclick="water(1)">+</button></div>
+    <div class="chips" role="group" aria-label="סוג היום">${[['regular', 'יום רגיל'], ['out', 'בחוץ / טיול'], ['sick', 'חולה']].map(([v, l]) => `<button class="chip ${d.type === v ? 'on' : ''}" aria-pressed="${d.type === v}" onclick="setType('${v}')">${l}</button>`).join('')}</div>
+    ${out ? '<p class="small muted">ביום בחוץ טווח הקלוריות רחב יותר, ופריט ג׳אנק אחד לא מוריד נקודות. החלבון עדיין הכי חשוב.</p>' : ''}
+    <label class="check small"><input type="checkbox" ${d.trained ? 'checked' : ''} onchange="toggleTrained()"> התאמנתי ${isToday ? 'היום' : 'ביום הזה'}</label>
+  </section>`;
+
+  return dayNav + hero + ask + favs + log + dayCard;
+}
+function brk(name, pts, max, sub) {
+  return `<div class="brk-row"><b>${name}</b><span class="pts"><span class="num">${Math.round(pts)}/${max}</span> נק׳</span><span class="sub">${sub}</span>${pbar(pts / max)}</div>`;
+}
+
+function renderSheet() {
+  const s = S.sheet;
+  if (!s) return '';
+  let body = '';
+  if (s.type === 'fav') {
+    body = `<h2>מה אתה אוהב לאכול?</h2>
+      <label class="field"><span>שם המאכל, ואם בא לך גם כמות</span><input id="f-name" class="keep" maxlength="80" placeholder="למשל: טוסט גבינה צהובה, או 2 ביצים מקושקשות" onkeydown="if(event.key==='Enter')saveFav()"></label>
+      ${aiOn() ? '<p class="small muted">הבינה המלאכותית תעריך קלוריות וחלבון. אם אתה יודע את הערכים, אפשר להכניס אותם בעצמך.</p>' : ''}
+      <details ${aiOn() ? '' : 'open'}><summary class="small muted">אני אכניס ערכים בעצמי</summary><div class="grid2" style="margin-top:10px">
+        <label class="field"><span>קלוריות</span><input id="f-kcal" class="keep" type="number" inputmode="numeric"></label>
+        <label class="field"><span>חלבון (גרם)</span><input id="f-protein" class="keep" type="number" inputmode="numeric"></label>
+      </div></details>
+      ${S.favBusy ? '<div class="thinking"><span class="dots"><i></i><i></i><i></i></span>מעריך ערכים…</div>' : ''}
+      <div class="row"><button class="btn" onclick="saveFav()" ${S.favBusy ? 'disabled' : ''}>שמור במועדפים</button><button class="btn-ghost muted" onclick="closeSheet()">ביטול</button></div>`;
+  } else if (s.type === 'manual') {
+    body = `<h2>הוספה ידנית</h2>
+      <label class="field"><span>שם המאכל</span><input id="m-name" maxlength="80" value="${esc(s.name || '')}"></label>
+      <div class="grid3">
+        <label class="field"><span>קלוריות</span><input id="m-kcal" type="number" inputmode="numeric"></label>
+        <label class="field"><span>חלבון (ג׳)</span><input id="m-protein" type="number" inputmode="numeric"></label>
+        <label class="field"><span>ירק/פרי</span><select id="m-veg"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+      </div>
+      <label class="check"><input type="checkbox" id="m-junk"> ג׳אנק (ממתק, חטיף, מטוגן, שתייה ממותקת)</label>
+      <div class="row"><button class="btn" onclick="addManual()">הוסף</button><button class="btn-ghost muted" onclick="closeSheet()">ביטול</button></div>`;
+  } else if (s.type === 'edit') {
+    const f = (S.days[S.date] || blankDay()).foods.find(x => x.id === s.id);
+    if (!f) return '';
+    const isFav = S.favs.some(x => x.name === f.name);
+    body = `<h2>עריכת פריט</h2>
+      <label class="field"><span>שם</span><input id="e-name" value="${esc(f.name)}" maxlength="80"></label>
+      <div class="grid3">
+        <label class="field"><span>קלוריות</span><input id="e-kcal" type="number" inputmode="numeric" value="${f.kcal}"></label>
+        <label class="field"><span>חלבון (ג׳)</span><input id="e-protein" type="number" inputmode="numeric" value="${f.protein}"></label>
+        <label class="field"><span>ירק/פרי</span><input id="e-veg" type="number" inputmode="numeric" min="0" max="10" value="${f.veg || 0}"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="e-junk" ${f.junk ? 'checked' : ''}> ג׳אנק</label>
+      <div class="row"><button class="btn" onclick="saveEdit()">שמור</button>${isFav ? '' : `<button class="btn-soft" onclick="favFromItem('${f.id}')">שמור במועדפים</button>`}<button class="btn-ghost" style="color:var(--red);margin-inline-start:auto" onclick="delFood('${f.id}')">מחק</button></div>`;
+  }
+  return `<div class="scrim" onclick="if(event.target===this)closeSheet()"><div class="sheet" role="dialog" aria-modal="true"><span class="grab"></span>${body}</div></div>`;
+}
+
+function renderWeek() {
+  const T = targets(S.profile);
+  if (!T) return needProfile();
+  const w = weekData(T), end = addDays(w.start, 6), tk = todayKey();
+  const thisWeek = w.start === weekStart(tk);
+  const nav = `<div class="row between"><button class="btn-ghost" onclick="shiftWeek(-1)">→ שבוע קודם</button><b>${thisWeek ? 'השבוע' : `<span class="num">${shortDate(w.start)}–${shortDate(end)}</span>`}</b><button class="btn-ghost" onclick="shiftWeek(1)" ${thisWeek ? 'disabled style="visibility:hidden"' : ''}>שבוע הבא ←</button></div>`;
+  const sub = !w.scored.length ? 'עוד אין ימים רשומים בשבוע הזה.'
+    : `ממוצע של ${w.scored.length === 1 ? 'יום אחד' : w.scored.length + ' ימים'} שנרשמו${w.sick ? `, בלי ${w.sick === 1 ? 'יום המחלה' : 'ימי המחלה'}` : ''}.`;
+  const hero = `<section class="card">
+    <div class="hero">${ring(w.score)}<div class="hero-side"><span class="grade">${w.score != null ? (w.score >= 85 ? 'שבוע מצוין' : w.score >= 70 ? 'שבוע טוב' : w.score >= 50 ? 'שבוע סביר' : 'יש מה לשפר') : 'ציון שבועי'}</span><p class="small muted">${sub}</p></div></div>
+    <div class="wchart">${w.days.map(x => {
+      const fut = x.k > tk, sick = x.d && x.d.type === 'sick', s = x.sc ? x.sc.total : 0;
+      return `<button class="wbar ${x.k === tk ? 'today' : ''}" ${fut ? 'disabled' : ''} onclick="openDay('${x.k}')" aria-label="${dayName(x.k)}: ${sick ? 'חולה' : x.sc ? 'ציון ' + x.sc.total : 'לא נרשם'}"><span class="wnum num">${x.sc ? x.sc.total : ''}</span><span class="wcol ${sick ? 'sick' : ''}"><i style="height:${s}%"></i></span><span class="wlab">${dayName(x.k, 'narrow')}</span></button>`;
+    }).join('')}</div>
+  </section>`;
+  const tiles = w.scored.length ? `<section class="tiles">
+    <div class="tile"><span class="k">חלבון ממוצע</span><span class="v"><span class="num">${w.protein}</span><small> ג׳ ביום</small></span></div>
+    <div class="tile"><span class="k">ימים ביעד החלבון</span><span class="v"><span class="num">${w.proteinHits}</span><small> מתוך ${w.scored.length}</small></span></div>
+    <div class="tile"><span class="k">ירקות ופירות</span><span class="v"><span class="num">${w.veg.toFixed(1)}</span><small> מנות ביום</small></span></div>
+    <div class="tile"><span class="k">מים</span><span class="v"><span class="num">${w.water.toFixed(1)}</span><small> כוסות ביום</small></span></div>
+  </section>` : '';
+  let tip = '';
+  if (w.weakest) tip = `<section class="tip"><b>דבר אחד לשפר: ${PARTS[w.weakest][0]}</b><p>${TIPS[w.weakest]}</p></section>`;
+  else if (w.scored.length >= 3) tip = `<section class="tip"><b>שבוע טוב</b><p>כל המדדים קרובים ליעד. תמשיך ככה.</p></section>`;
+  return nav + hero + tiles + tip + '<p class="small muted">לחיצה על יום בגרף פותחת אותו.</p>';
+}
+
+function renderCoach() {
+  if (!aiOn()) {
+    return `<section class="card"><h2>המאמן לא זמין כרגע</h2><p>${S.aiOff
+      ? 'הבינה המלאכותית לא מאושרת בדף הזה. אפשר לאשר אותה בתפריט ההרשאות של הדף ולרענן.'
+      : 'המאמן עובד כשפותחים את צלחת דרך Claude. אפשר בינתיים לרשום אוכל ולקבל ציון כרגיל.'}</p></section>`;
+  }
+  const msgs = S.chat.map(m => `<div class="msg ${m.role}">${m.role === 'user' ? esc(m.content) : md(m.content)}</div>`).join('');
+  const stream = S.coachBusy ? `<div class="msg assistant" id="stream">${S.stream ? md(S.stream) : '<span class="thinking"><span class="dots"><i></i><i></i><i></i></span>חושב…</span>'}</div>` : '';
+  const intro = !S.chat.length && !S.coachBusy ? `<section class="card"><h2>היי, אני המאמן שלך</h2>
+      <p class="muted">אני רואה מה רשמת היום ובימים האחרונים, את היעדים שלך, ואת מה שכתבת לי בפרופיל. אפשר לשאול אותי כל דבר על אוכל.</p>
+      <div class="sugg">${suggestions().map((q, i) => `<button onclick="coachSend(suggestions()[${i}])">${esc(q)}</button>`).join('')}</div>
+    </section>` : '';
+  const head = S.chat.length ? `<div class="row between"><h2>המאמן</h2><button class="btn-ghost muted" onclick="clearChat()" ${S.coachBusy ? 'disabled' : ''}>שיחה חדשה</button></div>` : '';
+  return `${head}${intro}<div class="chat">${msgs}${stream}<span id="chat-end"></span></div>
+    <div class="composer"><div class="ask"><label class="sr" for="coach-input">הודעה למאמן</label><textarea id="coach-input" class="keep" rows="1" placeholder="כתוב למאמן…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>${S.coachBusy ? '<button class="btn-soft" onclick="S.coachCtl&&S.coachCtl.abort()">עצור</button>' : '<button class="btn" onclick="coachSend()">שלח</button>'}</div></div>`;
+}
+
+function renderProfile() {
+  const lock = '<span class="lock-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
+  if (!S.profileOpen) {
+    return `<section class="card locked">${lock}<h2>הפרטים שלך מוסתרים</h2><p class="muted">גובה, משקל ושאר הפרטים האישיים לא מופיעים במסכים האחרים, כדי שתוכל להראות את האפליקציה לחברים.</p><button class="btn" onclick="S.profileOpen=true;render()">הצג את הפרטים</button></section>`;
+  }
+  const p = S.profile || { sex: 'm', goal: 'gain', trainDays: 4 };
+  const T = targets(S.profile);
+  const v = x => x == null ? '' : esc(String(x));
+  const opt = (cur, value, label) => `<option value="${value}" ${cur === value ? 'selected' : ''}>${label}</option>`;
+  const wl = [...S.weights].reverse().slice(0, 6);
+  return `<div class="row between"><h2>הפרופיל שלך</h2><button class="btn-soft" onclick="S.profileOpen=false;render()">הסתר</button></div>
+  ${T ? `<section class="tiles">
+    <div class="tile"><span class="k">חלבון ביום</span><span class="v"><span class="num">${T.protein}</span><small> ג׳</small></span></div>
+    <div class="tile"><span class="k">קלוריות ביום</span><span class="v"><span class="num">${k1(T.kcalMin)}–${k1(T.kcalMax)}</span></span></div>
+  </section>` : ''}
+  <section class="card">
+    <h2>הפרטים שלי</h2>
+    <div class="grid2">
+      <label class="field"><span>גיל</span><input id="p-age" class="keep" type="number" inputmode="numeric" value="${v(p.age)}"></label>
+      <label class="field"><span>מין</span><select id="p-sex" class="keep">${opt(p.sex, 'm', 'זכר')}${opt(p.sex, 'f', 'נקבה')}</select></label>
+      <label class="field"><span>גובה (ס״מ)</span><input id="p-height" class="keep" type="number" inputmode="numeric" value="${v(p.height)}"></label>
+      <label class="field"><span>משקל (ק״ג)</span><input id="p-weight" class="keep" type="number" inputmode="decimal" step="0.1" value="${v(p.weight)}"></label>
+      <label class="field"><span>אחוז שומן (לא חובה)</span><input id="p-bf" class="keep" type="number" inputmode="numeric" value="${v(p.bodyFat)}"></label>
+      <label class="field"><span>אימונים בשבוע</span><input id="p-train" class="keep" type="number" inputmode="numeric" min="0" max="7" value="${v(p.trainDays)}"></label>
+    </div>
+    <label class="field"><span>מטרה</span><select id="p-goal" class="keep">${opt(p.goal, 'gain', GOALS.gain)}${opt(p.goal, 'keep', GOALS.keep)}${opt(p.goal, 'lose', GOALS.lose)}</select></label>
+    <label class="field"><span>מה המאמן צריך לדעת עליך</span><textarea id="p-notes" class="in keep" placeholder="למשל: פעם בחודש אני נוסע לצפון ליומיים. בסופי שבוע אני אוכל בחוץ עם חברים. אני לא אוהב דגים.">${v(p.notes)}</textarea></label>
+    <details><summary class="small muted">יעדים ידניים (לא חובה)</summary><div class="grid2" style="margin-top:10px">
+      <label class="field"><span>חלבון ביום (ג׳)</span><input id="p-protein" class="keep" type="number" inputmode="numeric" value="${v(p.proteinOverride)}"></label>
+      <label class="field"><span>קלוריות ביום</span><input id="p-kcal" class="keep" type="number" inputmode="numeric" value="${v(p.kcalOverride)}"></label>
+    </div></details>
+    <div><button class="btn" onclick="saveProfile()">שמור</button></div>
+    ${T ? `<p class="small muted">החישוב לפי גובה, משקל, גיל ורמת פעילות${p.goal === 'gain' ? ', ועוד 300 קלוריות לעלייה במסה' : ''}. חלבון: 1.8 גרם לכל ק״ג. אם המשקל לא עולה אחרי 3 שבועות, תעלה את יעד הקלוריות ב-150 עד 200.</p>` : ''}
+  </section>
+  <section class="card"><h2>משקל</h2>
+    <div class="row"><input id="w-kg" class="keep" type="number" inputmode="decimal" step="0.1" placeholder="משקל היום בק״ג" aria-label="משקל היום בק״ג" style="flex:1;min-width:0;width:auto"><button class="btn" onclick="saveWeight()">שמור</button></div>
+    <p class="small muted">כדאי להישקל פעם בשבוע, בבוקר, באותם תנאים.</p>
+    ${trendHtml()}
+    ${wl.length ? `<ul class="items">${wl.map(e => `<li class="item"><span class="item-main"><span class="item-name"><span class="num">${Number(e.kg).toFixed(1)}</span> ק״ג</span><span class="item-meta num">${shortDate(e.date)}</span></span><button class="btn-ghost muted" onclick="delWeight('${e.date}')">מחק</button></li>`).join('')}</ul>` : ''}
+  </section>
+  <p class="small muted">${S.mode === 'cloud' ? 'הנתונים נשמרים בחשבון Claude שלך. רק אתה רואה אותם, גם אם תשתף את הקישור.' : 'הנתונים נשמרים בדפדפן של המכשיר הזה בלבד.'}</p>`;
+}
+
+function render() {
+  const main = document.getElementById('main');
+  const keep = {};
+  if (S.lastTab === S.tab) document.querySelectorAll('.keep').forEach(el => { keep[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
+  let html;
+  if (!S.ready) html = '<p class="muted">טוען…</p>';
+  else if (S.loadError) html = '<section class="card"><h2>לא הצלחתי לטעון את הנתונים</h2><p>בדוק את החיבור לאינטרנט ורענן את הדף. שום דבר לא נמחק.</p></section>';
+  else html = { today: renderToday, week: renderWeek, coach: renderCoach, profile: renderProfile }[S.tab]();
+  main.innerHTML = html;
+  document.getElementById('sheet-root').innerHTML = S.ready && !S.loadError ? renderSheet() : '';
+  for (const id in keep) {
+    if (S.clearIds.has(id)) continue;
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (el.type === 'checkbox') el.checked = keep[id]; else el.value = keep[id];
+  }
+  S.clearIds.clear();
+  S.lastTab = S.tab;
+  document.querySelectorAll('.tabs button').forEach(b => {
+    const on = b.dataset.tab === S.tab;
+    b.classList.toggle('on', on);
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  document.getElementById('hello').innerHTML = `<b>${greeting()}</b>${new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}`;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.sheet) closeSheet(); });
+
+async function boot() {
+  render();
+  const aiP = window.claude && typeof claude.use === 'function' ? claude.use('sample').catch(() => null) : Promise.resolve(null);
+  await Store.init();
+  S.mode = Store.mode;
+  try { Object.assign(S, await Store.loadAll()); } catch (e) { S.loadError = true; }
+  S.ready = true; render();
+  const ai = await aiP;
+  if (ai) { S.ai = ai; render(); }
+}
+boot();
+</script>
+</body></html>
